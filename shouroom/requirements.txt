@@ -1,0 +1,6 @@
+selenium
+psycopg2-binary
+webdriver-manager
+aiogram
+beautifulsoup4
+lxml
