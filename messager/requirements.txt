@@ -1,0 +1,45 @@
+# FastAPI и ASGI
+fastapi>=0.129.0
+uvicorn[standard]>=0.41.0
+
+# Pydantic для валидации
+pydantic>=2.12.5
+
+# SQLAlchemy с поддержкой async
+SQLAlchemy>=2.0.46
+asyncpg>=0.31.0
+
+# JWT авторизация
+python-jose[cryptography]>=3.3.0
+
+# Загрузка .env
+python-dotenv>=1.0.0
+
+# Шифрование паролей
+pwdlib
+
+cryptography>=41.0.0
+
+# Для логирования и работы с типами
+typing-extensions>=4.7.1
+
+# Вспомогательные
+python-multipart>=0.0.6   # для OAuth2 form data
+
+PyJWT
+
+# Redis for rate limiting and brute-force protection
+redis
+
+pwdlib[argon2]
+
+pydantic[email]
+
+jinja2
+
+# LiveKit для видеозвонков
+livekit-api>=1.1.0
+
+beautifulsoup4
+
+lxml

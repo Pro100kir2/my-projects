@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Жалоба - Nexo Messenger</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root, [data-theme="dark"] {
+      --bg: #0a192f;
+      --sidebar: rgba(17, 24, 39, 0.95);
+      --chat-bg: #111827;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --accent: #6366f1;
+      --accent-dark: #4f46e5;
+      --border: rgba(148, 163, 184, 0.15);
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --success: #22c55e;
+    }
+    [data-theme="light"] {
+      --bg: #f1f5f9;
+      --sidebar: rgba(255,255,255,0.95);
+      --chat-bg: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --accent: #4f46e5;
+      --accent-dark: #4338ca;
+      --border: rgba(0,0,0,0.08);
+      --danger: #dc2626;
+      --warning: #d97706;
+      --success: #16a34a;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+      flex: 1;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: var(--danger);
+    }
+
+    .step {
+      background: var(--chat-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      display: none;
+    }
+
+    .step.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .step-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .step-number {
+      background: var(--accent);
+      color: white;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .warning-box {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid var(--danger);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .warning-title {
+      color: var(--danger);
+      font-weight: 600;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .warning-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .warning-list li {
+      padding: 0.5rem 0;
+      padding-left: 1.5rem;
+      position: relative;
+      line-height: 1.5;
+    }
+
+    .warning-list li:before {
+      content: "⚠️";
+      position: absolute;
+      left: 0;
+    }
+
+    .consequence-box {
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid var(--warning);
+      border-radius: 12px;
+      padding: 1rem;
+      margin-top: 1rem;
+    }
+
+    .consequence-title {
+      color: var(--warning);
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .checkbox-group {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      padding: 1rem;
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .checkbox-item:hover {
+      background: rgba(99, 102, 241, 0.1);
+      border-color: var(--accent);
+    }
+
+    .checkbox-item.selected {
+      background: rgba(99, 102, 241, 0.2);
+      border-color: var(--accent);
+    }
+
+    .checkbox-item input[type="checkbox"] {
+      margin-right: 0.75rem;
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    .checkbox-item.urgent {
+      border-color: var(--danger);
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    .checkbox-item.urgent.selected {
+      background: rgba(239, 68, 68, 0.2);
+    }
+
+    .file-upload {
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .file-upload:hover {
+      border-color: var(--accent);
+      background: rgba(99, 102, 241, 0.05);
+    }
+
+    .file-upload.dragover {
+      border-color: var(--accent);
+      background: rgba(99, 102, 241, 0.1);
+    }
+
+    .file-input {
+      display: none;
+    }
+
+    .file-preview {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .file-preview-item {
+      position: relative;
+      border-radius: 8px;
+      overflow: hidden;
+      aspect-ratio: 1;
+    }
+
+    .file-preview-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .file-remove {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      background: rgba(239, 68, 68, 0.8);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+
+    .textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 1rem;
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.95rem;
+      resize: vertical;
+      margin-bottom: 1rem;
+    }
+
+    .textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    .char-count {
+      text-align: right;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 1rem;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-dark);
+    }
+
+    .btn-secondary {
+      background: var(--border);
+      color: var(--text);
+    }
+
+    .btn-secondary:hover {
+      background: var(--text-muted);
+      color: white;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #dc2626;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+    }
+
+    .progress-bar {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin-bottom: 2rem;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      transition: width 0.3s ease;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 1rem;
+      }
+      
+      .step {
+        padding: 1.5rem;
+      }
+      
+      .checkbox-group {
+        grid-template-columns: 1fr;
+      }
+      
+      .btn-group {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      </div>
+      <h1>🚨 Пожаловаться на пользователя</h1>
+      <p style="color: var(--text-muted);">Ваши жалобы помогают сделать Nexo безопаснее</p>
+    </div>
+
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill" style="width: 33%;"></div>
+    </div>
+
+    <!-- Step 1: Warning -->
+    <div class="step active" id="step1">
+      <div class="step-title">
+        <span class="step-number">1</span>
+        Важное предупреждение
+      </div>
+      
+      <div class="warning-box">
+        <div class="warning-title">
+          ⚠️ Отправляйте жалобу только если действительно необходимо
+        </div>
+        <ul class="warning-list">
+          <li>Пользователь пропагандирует насилие, терроризм или наркотики</li>
+          <li>Присылает интимные фотографии (если это происходит по отношению к несовершеннолетнему - необходимо уточнить)</li>
+          <li>Пользователь призывает совершить самоубийство</li>
+          <li>Пользователь агрессирует, угрожает или продолжает нецензурно выражаться после вашей просьбы прекратить</li>
+          <li>Пользователь под любым предлогом просит перевести деньги</li>
+        </ul>
+      </div>
+
+      <div class="consequence-box">
+        <div class="consequence-title">⚖️ Важно знать</div>
+        <p>В случае если репорт был отправлен ради шутки, вы получите бан от 1 часа до года в зависимости от указанных причин репорта.</p>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-secondary" onclick="history.back()">Отмена</button>
+        <button class="btn btn-primary" onclick="nextStep()">Далее →</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Evidence and Reasons -->
+    <div class="step" id="step2">
+      <div class="step-title">
+        <span class="step-number">2</span>
+        Прикрепите доказательства и выберите причины
+      </div>
+
+      <div class="file-upload" onclick="document.getElementById('fileInput').click()" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+        <input type="file" id="fileInput" class="file-input" multiple accept="image/*" onchange="handleFileSelect(event)">
+        <div style="font-size: 2rem; margin-bottom: 0.5rem;">📎</div>
+        <div>Нажмите или перетащите сюда скриншоты чата</div>
+        <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">
+          От 1 до 10 изображений где видно нарушение правил
+        </div>
+      </div>
+
+      <div class="file-preview" id="filePreview"></div>
+
+      <div style="margin-bottom: 1rem;">
+        <div style="font-weight: 600; margin-bottom: 1rem;">Выберите причины жалобы:</div>
+        <div class="checkbox-group">
+          <label class="checkbox-item">
+            <input type="checkbox" name="reason" value="mat" onchange="updateReasons()">
+            <span>Мат</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" name="reason" value="threats" onchange="updateReasons()">
+            <span>Угрозы</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" name="reason" value="intimate" onchange="updateReasons()">
+            <span>Интим услуги</span>
+          </label>
+
+          <label class="checkbox-item">
+            <input type="checkbox" name="reason" value="violence" onchange="updateReasons()">
+            <span>Насилие</span>
+          </label>
+
+          <label class="checkbox-item urgent">
+            <input type="checkbox" name="reason" value="drugs" onchange="updateReasons()">
+            <span>Наркотики</span>
+          </label>
+
+          <label class="checkbox-item urgent">
+            <input type="checkbox" name="reason" value="pedophilia" onchange="updateReasons()">
+            <span>Педофилия</span>
+          </label>
+          <label class="checkbox-item urgent">
+            <input type="checkbox" name="reason" value="fraud" onchange="updateReasons()">
+            <span>Мошенничество</span>
+          </label>
+          <label class="checkbox-item urgent">
+            <input type="checkbox" name="reason" value="suicide" onchange="updateReasons()">
+            <span>Призывы к суициду</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-secondary" onclick="prevStep()">← Назад</button>
+        <button class="btn btn-primary" id="step2Next" onclick="nextStep()" disabled>Далее →</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Description -->
+    <div class="step" id="step3">
+      <div class="step-title">
+        <span class="step-number">3</span>
+        Подробное описание
+      </div>
+
+      <div style="margin-bottom: 1rem;">
+        <label for="description" style="font-weight: 600; display: block; margin-bottom: 0.5rem;">
+          Опишите ситуацию подробнее:
+        </label>
+        <textarea 
+          id="description" 
+          class="textarea" 
+          placeholder="Опишите что именно произошло, когда и как часто это повторяется..."
+          maxlength="1000"
+          oninput="updateCharCount()"
+        ></textarea>
+        <div class="char-count">
+          <span id="charCount">0</span> / 1000 символов
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-secondary" onclick="prevStep()">← Назад</button>
+        <button class="btn btn-danger" id="submitBtn" onclick="submitReport()" disabled>Отправить жалобу</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentStep = 1;
+    let uploadedFiles = [];
+    let selectedReasons = [];
+    let isUrgent = false;
+
+    function updateProgress() {
+      const progress = (currentStep / 3) * 100;
+      document.getElementById('progressFill').style.width = progress + '%';
+    }
+
+    function showStep(stepNum) {
+      document.querySelectorAll('.step').forEach(step => step.classList.remove('active'));
+      document.getElementById(`step${stepNum}`).classList.add('active');
+      currentStep = stepNum;
+      updateProgress();
+    }
+
+    function nextStep() {
+      if (currentStep < 3) {
+        showStep(currentStep + 1);
+      }
+    }
+
+    function prevStep() {
+      if (currentStep > 1) {
+        showStep(currentStep - 1);
+      }
+    }
+
+    function handleFileSelect(event) {
+      const files = Array.from(event.target.files);
+      handleFiles(files);
+    }
+
+    function handleDrop(event) {
+      event.preventDefault();
+      event.currentTarget.classList.remove('dragover');
+      const files = Array.from(event.dataTransfer.files);
+      handleFiles(files);
+    }
+
+    function handleDragOver(event) {
+      event.preventDefault();
+      event.currentTarget.classList.add('dragover');
+    }
+
+    function handleDragLeave(event) {
+      event.currentTarget.classList.remove('dragover');
+    }
+
+    function handleFiles(files) {
+      const imageFiles = files.filter(file => file.type.startsWith('image/'));
+      
+      if (uploadedFiles.length + imageFiles.length > 10) {
+        alert('Максимум 10 изображений');
+        return;
+      }
+
+      imageFiles.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          uploadedFiles.push({
+            name: file.name,
+            data: e.target.result,
+            file: file
+          });
+          updateFilePreview();
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function updateFilePreview() {
+      const preview = document.getElementById('filePreview');
+      preview.innerHTML = '';
+
+      uploadedFiles.forEach((file, index) => {
+        const item = document.createElement('div');
+        item.className = 'file-preview-item';
+        item.innerHTML = `
+          <img src="${file.data}" alt="${file.name}">
+          <button class="file-remove" onclick="removeFile(${index})">×</button>
+        `;
+        preview.appendChild(item);
+      });
+
+      updateStep2Button();
+    }
+
+    function removeFile(index) {
+      uploadedFiles.splice(index, 1);
+      updateFilePreview();
+    }
+
+    function updateReasons() {
+      const checkboxes = document.querySelectorAll('input[name="reason"]:checked');
+      selectedReasons = Array.from(checkboxes).map(cb => cb.value);
+      
+      // Check if any urgent reasons are selected
+      const urgentReasons = ['pedophilia', 'fraud', 'suicide', 'drugs'];
+      isUrgent = selectedReasons.some(reason => urgentReasons.includes(reason));
+
+      // Update visual state
+      document.querySelectorAll('.checkbox-item').forEach(item => {
+        const checkbox = item.querySelector('input[type="checkbox"]');
+        if (checkbox.checked) {
+          item.classList.add('selected');
+        } else {
+          item.classList.remove('selected');
+        }
+      });
+
+      updateStep2Button();
+    }
+
+    function updateStep2Button() {
+      const button = document.getElementById('step2Next');
+      button.disabled = uploadedFiles.length === 0 || selectedReasons.length === 0;
+    }
+
+    function updateCharCount() {
+      const textarea = document.getElementById('description');
+      const charCount = document.getElementById('charCount');
+      const submitBtn = document.getElementById('submitBtn');
+      
+      charCount.textContent = textarea.value.length;
+      submitBtn.disabled = textarea.value.length < 10 || textarea.value.length > 1000;
+    }
+
+    async function submitReport() {
+      const description = document.getElementById('description').value;
+      const reportedUserId = new URLSearchParams(window.location.search).get('user_id');
+      
+      if (!reportedUserId) {
+        alert('Ошибка: не указан пользователь');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('reported_user_id', reportedUserId);
+      formData.append('text', description);
+      formData.append('reasons', JSON.stringify(selectedReasons));
+      formData.append('is_urgent', isUrgent);
+      
+      uploadedFiles.forEach((file) => {
+          formData.append('files', file.file); // <-- ВСЕ файлы с одним ключом 'files'
+      });
+
+      try {
+        const response = await fetch('/api/reports', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+          }
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          alert('Жалоба успешно отправлена. Спасибо за помощь в обеспечении безопасности!');
+          if (result.redirect) {
+            window.location.href = result.redirect;
+          } else {
+            window.close();
+          }
+        } else {
+          const error = await response.json();
+          alert('Ошибка при отправке жалобы: ' + error.detail);
+        }
+      } catch (error) {
+        alert('Ошибка при отправке жалобы: ' + error.message);
+      }
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      updateProgress();
+    });
+  </script>
+</body>
+</html>

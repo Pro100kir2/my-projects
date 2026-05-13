@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nexo — Панель администратора</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a192f;
+      --panel: rgba(17,24,39,0.97);
+      --card: #111827;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --accent: #6366f1;
+      --accent-dark: #4f46e5;
+      --border: rgba(148,163,184,0.15);
+      --danger: #ef4444;
+      --success: #22c55e;
+      --warn: #f59e0b;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Top bar ── */
+    .topbar {
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .topbar-logo {
+      font-weight: 700;
+      font-size: 1.15rem;
+      color: var(--accent);
+      letter-spacing: 0.03em;
+    }
+    .topbar-tabs {
+      display: flex;
+      gap: 0.25rem;
+      flex: 1;
+    }
+    .tab-btn {
+      padding: 0.45rem 1.1rem;
+      border-radius: 8px;
+      border: none;
+      background: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.92rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .tab-btn:hover { background: rgba(99,102,241,0.1); color: var(--text); }
+    .tab-btn.active { background: var(--accent); color: white; }
+    .topbar-user {
+      font-size: 0.85rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .logout-btn {
+      padding: 0.35rem 0.9rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.82rem;
+      transition: all 0.15s;
+    }
+    .logout-btn:hover { color: var(--danger); border-color: var(--danger); }
+
+    /* ── Layout ── */
+    .page { display: none; padding: 2rem; max-width: 1300px; margin: 0 auto; }
+    .page.active { display: block; }
+
+    /* ── Stats row ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.1rem 1.3rem;
+    }
+    .stat-label { font-size: 0.78rem; color: var(--muted); margin-bottom: 0.3rem; }
+    .stat-value { font-size: 1.6rem; font-weight: 700; }
+
+    /* ── Search bar ── */
+    .search-bar {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+      align-items: center;
+    }
+    .search-bar input {
+      flex: 1;
+      padding: 0.65rem 1rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 0.9rem;
+    }
+    .search-bar input:focus { outline: none; border-color: var(--accent); }
+    .filter-select {
+      padding: 0.65rem 0.9rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    .filter-select:focus { outline: none; }
+
+    /* ── Table ── */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--card);
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .data-table th {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background: rgba(0,0,0,0.2);
+      border-bottom: 1px solid var(--border);
+    }
+    .data-table td {
+      padding: 0.85rem 1rem;
+      font-size: 0.88rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:hover td { background: rgba(99,102,241,0.05); }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .badge-online  { background: rgba(34,197,94,0.15);  color: var(--success); }
+    .badge-offline { background: rgba(148,163,184,0.12); color: var(--muted); }
+    .badge-banned  { background: rgba(239,68,68,0.15);   color: var(--danger); }
+    .badge-pending { background: rgba(245,158,11,0.15);  color: var(--warn); }
+    .badge-done    { background: rgba(34,197,94,0.12);   color: var(--success); }
+    .badge-declined{ background: rgba(148,163,184,0.12); color: var(--muted); }
+
+    /* ── Action buttons ── */
+    .btn {
+      padding: 0.38rem 0.85rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .btn:hover { opacity: 0.85; transform: scale(1.03); }
+    .btn-danger  { background: var(--danger); color: white; }
+    .btn-success { background: var(--success); color: white; }
+    .btn-accent  { background: var(--accent); color: white; }
+    .btn-ghost   { background: rgba(148,163,184,0.12); color: var(--text); }
+    .btn-sm { padding: 0.28rem 0.65rem; font-size: 0.78rem; }
+
+    /* ── Reports cards ── */
+    .report-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 1.25rem;
+    }
+    .report-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: border-color 0.2s;
+    }
+    .report-card:hover { border-color: rgba(99,102,241,0.4); }
+    .report-card-header {
+      padding: 1rem 1.2rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .report-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 1rem; color: white; flex-shrink: 0;
+    }
+    .av-purple { background: linear-gradient(135deg,#6366f1,#a855f7); }
+    .av-red    { background: linear-gradient(135deg,#ef4444,#f97316); }
+    .av-blue   { background: linear-gradient(135deg,#3b82f6,#06b6d4); }
+    .av-green  { background: linear-gradient(135deg,#22c55e,#10b981); }
+    .report-meta { flex: 1; min-width: 0; }
+    .report-meta-title { font-size: 0.88rem; font-weight: 600; margin-bottom: 2px; }
+    .report-meta-sub   { font-size: 0.76rem; color: var(--muted); }
+    .report-card-body  { padding: 0.9rem 1.2rem; flex: 1; }
+    .report-text {
+      font-size: 0.87rem;
+      line-height: 1.5;
+      color: var(--text);
+      margin-bottom: 0.75rem;
+      word-break: break-word;
+    }
+    .report-screenshots {
+      display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 0.75rem;
+    }
+    .report-screenshot {
+      width: 72px; height: 72px; border-radius: 8px;
+      object-fit: cover; cursor: pointer;
+      border: 2px solid transparent;
+      transition: border-color 0.15s;
+    }
+    .report-screenshot:hover { border-color: var(--accent); }
+    .report-card-footer {
+      padding: 0.75rem 1.2rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    /* ── Ban modal ── */
+    .modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.65);
+      z-index: 200;
+      display: flex; align-items: center; justify-content: center;
+      padding: 1rem;
+    }
+    .modal-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 1.75rem;
+      width: 100%; max-width: 420px;
+      position: relative;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    .modal-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; }
+    .modal-close {
+      position: absolute; top: 0.75rem; right: 0.9rem;
+      background: none; border: none;
+      color: var(--muted); cursor: pointer; font-size: 1.4rem; line-height: 1;
+    }
+    .modal-close:hover { color: var(--text); }
+    
+    /* ── Clarify Modal ── */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 300;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-content {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+      width: 90%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .modal-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-header h3 {
+      margin: 0;
+      color: var(--text);
+    }
+    .modal-body {
+      padding: 1.5rem;
+      flex: 1;
+      overflow-y: auto;
+    }
+    .modal-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+    }
+    .clarify-screenshot {
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 0.5rem;
+      border: 2px solid var(--border);
+      transition: all 0.2s;
+    }
+    .clarify-screenshot:hover {
+      border-color: var(--accent);
+      transform: scale(1.05);
+    }
+    .clarify-screenshots {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .duration-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .dur-btn {
+      padding: 0.6rem;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.85rem;
+      text-align: center;
+      transition: all 0.15s;
+    }
+    .dur-btn:hover, .dur-btn.selected {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+    .dur-btn.lifetime {
+      grid-column: 1 / -1;
+      background: rgba(239,68,68,0.1);
+      border-color: rgba(239,68,68,0.3);
+      color: var(--danger);
+    }
+    .dur-btn.lifetime:hover, .dur-btn.lifetime.selected {
+      background: var(--danger);
+      border-color: var(--danger);
+      color: white;
+    }
+    .modal-note {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 1rem;
+      padding: 0.6rem 0.8rem;
+      background: rgba(245,158,11,0.08);
+      border-left: 3px solid var(--warn);
+      border-radius: 0 8px 8px 0;
+    }
+    .modal-actions { display: flex; gap: 0.6rem; justify-content: flex-end; }
+
+    /* ── Image lightbox ── */
+    .lightbox {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+      z-index: 300; display: flex; align-items: center; justify-content: center;
+      cursor: zoom-out;
+    }
+    .lightbox img { max-width: 90vw; max-height: 90vh; border-radius: 12px; }
+
+    /* ── User profile drawer ── */
+    .drawer-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      z-index: 150;
+    }
+    .drawer {
+      position: fixed; right: 0; top: 0; bottom: 0;
+      width: 340px; background: var(--card);
+      border-left: 1px solid var(--border);
+      z-index: 160; padding: 1.5rem;
+      overflow-y: auto;
+      animation: slideIn 0.25s ease;
+    }
+    @keyframes slideIn {
+      from { transform: translateX(100%); }
+      to   { transform: translateX(0); }
+    }
+    .drawer-close {
+      position: absolute; top: 1rem; right: 1rem;
+      background: none; border: none; color: var(--muted);
+      cursor: pointer; font-size: 1.4rem;
+    }
+    .drawer-avatar {
+      width: 72px; height: 72px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; font-weight: 700; color: white;
+      margin: 0 auto 0.75rem;
+    }
+    .drawer-name { font-size: 1.15rem; font-weight: 700; text-align: center; margin-bottom: 0.2rem; }
+    .drawer-tag  { font-size: 0.85rem; color: var(--muted); text-align: center; margin-bottom: 1.25rem; }
+    .drawer-field { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border); font-size: 0.88rem; }
+    .drawer-field-label { color: var(--muted); }
+    .drawer-actions { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1.25rem; }
+
+    /* ── Empty state ── */
+    .empty-state {
+      text-align: center; padding: 3rem 1rem;
+      color: var(--muted); font-size: 0.95rem;
+    }
+    .empty-state-icon { font-size: 3rem; margin-bottom: 0.75rem; }
+
+    /* ── Toast ── */
+    .toast-container {
+      position: fixed; bottom: 1.5rem; right: 1.5rem;
+      z-index: 400; display: flex; flex-direction: column; gap: 0.5rem;
+    }
+    .toast {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 0.85rem 1.2rem;
+      max-width: 300px; font-size: 0.88rem;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      animation: fadeUp 0.2s ease;
+    }
+    @keyframes fadeUp {
+      from { opacity:0; transform: translateY(12px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      .page { padding: 1rem; }
+      .topbar { padding: 0 1rem; }
+      .report-grid { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .drawer { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Top bar -->
+<header class="topbar">
+  <div class="topbar-logo">🛡 Nexo Admin</div>
+  <nav class="topbar-tabs">
+    <button class="tab-btn active" onclick="showPage('reports')">📋 Репорты</button>
+    <button class="tab-btn" onclick="showPage('users')">👥 Пользователи</button>
+  </nav>
+  <div class="topbar-user">
+    <span id="adminTagLabel">@admin</span>
+    <button class="logout-btn" onclick="logout()">Выйти</button>
+  </div>
+</header>
+
+<!-- ══════════ REPORTS PAGE ══════════ -->
+<div class="page active" id="page-reports">
+  <div class="stats-row" id="reportStats"></div>
+  <div class="search-bar">
+    <input type="text" id="reportSearch" placeholder="Поиск по тегу..." oninput="filterReports()">
+    <select class="filter-select" id="reportFilter" onchange="filterReports()">
+      <option value="">Все статусы</option>
+      <option value="pending">Ожидают</option>
+      <option value="banned">Забанен</option>
+      <option value="declined">Отклонён</option>
+      <option value="clarify">Уточнение</option>
+    </select>
+    <button class="btn btn-accent" onclick="loadReports()">🔄 Обновить</button>
+  </div>
+  <div class="report-grid" id="reportGrid">
+    <div class="empty-state">
+      <div class="empty-state-icon">📭</div>
+      Загрузка репортов...
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ USERS PAGE ══════════ -->
+<div class="page" id="page-users">
+  <div class="stats-row" id="userStats"></div>
+  <div class="search-bar">
+    <input type="text" id="userSearch" placeholder="Поиск по тегу или имени..." oninput="filterUsers()">
+    <select class="filter-select" id="userFilter" onchange="filterUsers()">
+      <option value="">Все</option>
+      <option value="online">В сети</option>
+      <option value="banned">Забанены</option>
+    </select>
+    <button class="btn btn-accent" onclick="loadUsers()">🔄 Обновить</button>
+  </div>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Пользователь</th>
+        <th>Тег</th>
+        <th>Статус</th>
+        <th>Регистрация</th>
+        <th>Бан до</th>
+        <th>Действия</th>
+      </tr>
+    </thead>
+    <tbody id="usersTableBody">
+      <tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--muted);">Загрузка...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ══════════ BAN MODAL ══════════ -->
+<div class="modal-backdrop" id="banModal" style="display:none;" onclick="closeBanModal(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeBanModal()">×</button>
+    <div class="modal-title">🔨 Выдать бан</div>
+    <div class="modal-note" id="banModalTarget"></div>
+    <div class="duration-grid">
+      <button class="dur-btn" data-hours="1"      onclick="selectDur(this)">1 час</button>
+      <button class="dur-btn" data-hours="6"      onclick="selectDur(this)">6 часов</button>
+      <button class="dur-btn" data-hours="12"     onclick="selectDur(this)">12 часов</button>
+      <button class="dur-btn" data-hours="24"     onclick="selectDur(this)">1 день</button>
+      <button class="dur-btn" data-hours="168"    onclick="selectDur(this)">7 дней</button>
+      <button class="dur-btn" data-hours="720"    onclick="selectDur(this)">30 дней</button>
+      <button class="dur-btn" data-hours="2160"   onclick="selectDur(this)">3 месяца</button>
+      <button class="dur-btn" data-hours="8760"   onclick="selectDur(this)">1 год</button>
+      <button class="dur-btn lifetime" data-hours="999999" onclick="selectDur(this)">⛔ Пожизненный</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeBanModal()">Отмена</button>
+      <button class="btn btn-danger" onclick="confirmBan()" id="confirmBanBtn" disabled>Выдать бан</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ IMAGE LIGHTBOX ══════════ -->
+<div class="lightbox" id="lightbox" style="display:none;" onclick="closeLightbox()">
+  <img id="lightboxImg" src="" alt="">
+</div>
+
+<!-- ══════════ USER DRAWER ══════════ -->
+<div class="drawer-backdrop" id="drawerBackdrop" style="display:none;" onclick="closeDrawer()"></div>
+<div class="drawer" id="userDrawer" style="display:none;">
+  <button class="drawer-close" onclick="closeDrawer()">×</button>
+  <div id="drawerContent"></div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+// ─────────────────────────────────────────────────────────────
+// Глобальные переменные
+// ─────────────────────────────────────────────────────────────
+const API = '';
+let accessToken  = localStorage.getItem('access_token');
+let refreshToken = localStorage.getItem('refresh_token');
+
+if (!accessToken) window.location.href = '/auth';
+
+axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+
+// ── Auth helpers ─────────────────────────────────────────────
+async function refreshTokenFn() {
+  if (!refreshToken) return false;
+  try {
+    const r = await axios.post(`${API}/refresh-token?refresh_token=${encodeURIComponent(refreshToken)}`);
+    accessToken = r.data.access_token;
+    localStorage.setItem('access_token', accessToken);
+    if (r.data.refresh_token) refreshToken = r.data.refresh_token;
+    localStorage.setItem('refresh_token', refreshToken);
+    axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+    return true;
+  } catch (_) { return false; }
+}
+
+async function apiGet(url) {
+  try {
+    const r = await axios.get(API + url);
+    return r.data;
+  } catch (e) {
+    if (e.response?.status === 401) {
+      if (await refreshTokenFn()) return apiGet(url);
+      logout();
+    }
+    throw e;
+  }
+}
+
+async function apiPost(url, data = null, params = null) {
+  try {
+    const config = params ? { params } : {};
+    const r = await axios.post(API + url, data, config);
+    return r.data;
+  } catch (e) {
+    if (e.response?.status === 401) {
+      if (await refreshTokenFn()) return apiPost(url, data, params);
+      logout();
+    }
+    throw e;
+  }
+}
+
+function logout() {
+  localStorage.clear();
+  window.location.href = '/auth';
+}
+
+// ── Page switching ───────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+  document.getElementById('page-' + name)?.classList.add('active');
+
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    const t = b.textContent.toLowerCase();
+    if ((name === 'reports' && t.includes('репорт')) || (name === 'users' && t.includes('пользов'))) {
+      b.classList.add('active');
+    }
+  });
+
+  if (name === 'reports') loadReports();
+  if (name === 'users')   loadUsers();
+}
+
+// ── Helpers ──────────────────────────────────────────────────
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
+function avatarColor(seed) {
+  const colors = ['av-purple','av-red','av-blue','av-green'];
+  let h = 0;
+  for (let i = 0; i < (seed||'').length; i++) h = (seed.charCodeAt(i) + ((h<<5) - h)) | 0;
+  return colors[Math.abs(h) % colors.length];
+}
+
+function formatDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('ru-RU') + ' ' + d.toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'});
+}
+
+function isBanned(user) {
+  return user.banned_until && new Date(user.banned_until) > new Date();
+}
+
+function toast(msg, type = '') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.style.borderLeft = type === 'ok' ? '3px solid var(--success)' : type === 'err' ? '3px solid var(--danger)' : '3px solid var(--accent)';
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; setTimeout(()=>t.remove(), 350); }, 2800);
+}
+
+// ── REPORTS ──────────────────────────────────────────────────
+let allReports = [];
+let currentClarifyReportId = null;
+let currentClarifyFromTag = null;
+
+async function loadReports() {
+  const grid = document.getElementById('reportGrid');
+  grid.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⏳</div>Загрузка репортов...</div>';
+
+  try {
+    allReports = await apiGet('/admin/reports');
+    renderReportStats();
+    filterReports();
+  } catch (e) {
+    console.error(e);
+    grid.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div>Ошибка загрузки репортов</div>';
+    toast('Не удалось загрузить репорты', 'err');
+  }
+}
+
+function renderReportStats() {
+  const total = allReports.length;
+  const pending = allReports.filter(r => r.status === 'pending').length;
+  const banned = allReports.filter(r => r.status === 'banned').length;
+  const declined = allReports.filter(r => r.status === 'declined').length;
+
+  document.getElementById('reportStats').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Всего</div><div class="stat-value">${total}</div></div>
+    <div class="stat-card"><div class="stat-label">Ожидают</div><div class="stat-value" style="color:var(--warn)">${pending}</div></div>
+    <div class="stat-card"><div class="stat-label">Забанено</div><div class="stat-value" style="color:var(--danger)">${banned}</div></div>
+    <div class="stat-card"><div class="stat-label">Отклонено</div><div class="stat-value" style="color:var(--muted)">${declined}</div></div>
+  `;
+}
+
+function filterReports() {
+  const q = (document.getElementById('reportSearch')?.value || '').toLowerCase();
+  const status = document.getElementById('reportFilter')?.value || '';
+
+  const list = allReports.filter(r => {
+    const matchQ = !q || r.from_tag.toLowerCase().includes(q) || r.reported_tag.toLowerCase().includes(q);
+    const matchS = !status || r.status === status;
+    return matchQ && matchS;
+  });
+
+  renderReports(list);
+}
+
+function renderReports(list) {
+  const grid = document.getElementById('reportGrid');
+  grid.innerHTML = '';
+
+  if (!list.length) {
+    grid.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div>Репортов пока нет</div>';
+    return;
+  }
+
+  list.forEach(r => {
+    const card = document.createElement('div');
+    card.className = 'report-card';
+    if (r.is_urgent) {
+      card.style.border = '2px solid var(--danger)';
+      card.style.boxShadow = '0 0 20px rgba(239, 68, 68, 0.3)';
+    }
+
+    // header
+    const header = document.createElement('div');
+    header.className = 'report-card-header';
+    header.innerHTML = `
+      <div class="report-avatar ${avatarColor(r.from_tag)}">${(r.from_name || r.from_tag || '?').slice(0,2).toUpperCase()}</div>
+      <div class="report-meta">
+        <div class="report-meta-title">
+          Репорт от <b>${escHtml(r.from_tag)}</b> на <b>${escHtml(r.reported_tag)}</b>
+          ${r.is_urgent ? '<span style="color: var(--danger); font-weight: 700; margin-left: 0.5rem;">🚨 СРОЧНЫЙ</span>' : ''}
+        </div>
+        <div class="report-meta-sub">${formatDate(r.created_at)}</div>
+      </div>
+    `;
+
+    // body
+    const body = document.createElement('div');
+    body.className = 'report-card-body';
+    
+    // Reasons
+    if (r.reasons && r.reasons.length > 0) {
+      const reasonsEl = document.createElement('div');
+      reasonsEl.className = 'report-reasons';
+      reasonsEl.style.marginBottom = '0.5rem';
+      reasonsEl.innerHTML = '<strong>Причины:</strong> ' + r.reasons.map(reason => {
+        const reasonLabels = {
+          'mat': 'Мат',
+          'threats': 'Угрозы',
+          'drugs': 'Наркотики',
+          'violence': 'Насилие',
+          'intimate': 'Интим услуги',
+          'pedophilia': 'Педофилия',
+          'fraud': 'Мошенничество',
+          'suicide': 'Призывы к суициду'
+        };
+        const label = reasonLabels[reason] || reason;
+        const isUrgentReason = ['pedophilia', 'fraud', 'suicide', 'drugs'].includes(reason);
+        return `<span style="background: ${isUrgentReason ? 'var(--danger)' : 'var(--accent)'}; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin-right: 4px;">${label}</span>`;
+      }).join(' ');
+      body.appendChild(reasonsEl);
+    }
+    
+    const textEl = document.createElement('div');
+    textEl.className = 'report-text';
+    textEl.innerHTML = escHtml(r.text).replace(/\n/g, '<br>');
+    body.appendChild(textEl);
+
+    const shots = document.createElement('div');
+    shots.className = 'report-screenshots';
+    (r.screenshot_urls || []).forEach(url => {
+      const img = document.createElement('img');
+      img.className = 'report-screenshot';
+      img.src = url;
+      img.onclick = () => openLightbox(url);
+      shots.appendChild(img);
+    });
+    if (shots.children.length) body.appendChild(shots);
+
+    // footer
+    const footer = document.createElement('div');
+    footer.className = 'report-card-footer';
+
+    const badge = document.createElement('span');
+    badge.className = `badge badge-${r.status}`;
+    badge.textContent = { pending: 'Ожидает', banned: 'Забанен', declined: 'Отклонён', clarify: 'Уточнение' }[r.status] || r.status;
+
+    const actions = document.createElement('div');
+    actions.style.marginLeft = 'auto';
+    actions.style.display = 'flex';
+    actions.style.gap = '0.5rem';
+
+    if (r.status === 'pending' || r.status === 'clarify') {
+      // Кнопка БАН (с выбором срока)
+      const banBtn = document.createElement('button');
+      banBtn.className = 'btn btn-danger btn-sm';
+      banBtn.textContent = 'В бан';
+      banBtn.onclick = () => openReportBanModal(r.id, r.reported_tag, r.reported_name);
+      actions.appendChild(banBtn);
+
+      // Отклонить
+      const decBtn = document.createElement('button');
+      decBtn.className = 'btn btn-ghost btn-sm';
+      decBtn.textContent = 'Отклонить';
+      decBtn.onclick = () => resolveReport(r.id, 'decline');
+      actions.appendChild(decBtn);
+
+    } else {
+      const info = document.createElement('span');
+      info.style.color = 'var(--muted)';
+      info.style.fontSize = '0.82rem';
+      info.textContent = r.status === 'banned' ? 'Забанен' : 'Отклонён';
+      actions.appendChild(info);
+    }
+
+    footer.append(badge, actions);
+    card.append(header, body, footer);
+    grid.appendChild(card);
+  });
+}
+
+// Общие действия с репортом (decline / clarify)
+async function resolveReport(reportId, action) {
+  if (!confirm(`Выполнить действие: ${action === 'decline' ? 'Отклонить' : 'Отправить на уточнение'}?`)) return;
+
+  try {
+    await apiPost(`/admin/reports/${reportId}/action`, null, { action });
+    toast('Готово', 'ok');
+    loadReports();
+  } catch (e) {
+    toast('Ошибка: ' + (e.response?.data?.detail || e.message), 'err');
+  }
+}
+
+// ── Ban Modal (универсальная для репортов и пользователей) ─────
+let selectedBanHours = null;
+let currentBanAction = null;   // функция, которая будет вызвана с выбранным количеством часов
+
+function openBanModal(titleHtml, actionFn) {
+  currentBanAction = actionFn;
+  document.getElementById('banModalTarget').innerHTML = titleHtml;
+  document.getElementById('banModal').style.display = 'flex';
+
+  selectedBanHours = null;
+  document.getElementById('confirmBanBtn').disabled = true;
+  document.querySelectorAll('.dur-btn').forEach(b => b.classList.remove('selected'));
+}
+
+function selectDur(btn) {
+  document.querySelectorAll('.dur-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedBanHours = Number(btn.dataset.hours);
+  document.getElementById('confirmBanBtn').disabled = false;
+}
+
+function closeBanModal() {
+  document.getElementById('banModal').style.display = 'none';
+}
+
+async function confirmBan() {
+  if (!currentBanAction || !selectedBanHours) return;
+
+  try {
+    await currentBanAction(selectedBanHours);
+    toast('Бан успешно выдан', 'ok');
+    loadReports();
+    loadUsers();
+  } catch (e) {
+    toast('Ошибка бана: ' + (e.response?.data?.detail || e.message), 'err');
+  }
+  closeBanModal();
+}
+
+// Открытие модалки для репорта
+function openReportBanModal(reportId, reportedTag, reportedName = '') {
+  const title = `Забанить <b>${escHtml(reportedTag)}</b>${reportedName ? ` (${escHtml(reportedName)})` : ''}`;
+  const fn = async (hours) => {
+    await apiPost(`/admin/reports/${reportId}/action`, null, { action: 'ban', ban_hours: hours });
+  };
+  openBanModal(title, fn);
+}
+
+// Открытие модалки для пользователя (из таблицы)
+function openUserBanModal(tag, name = '') {
+  const title = `Забанить <b>${escHtml(tag)}</b>${name && name !== tag ? ` (${escHtml(name)})` : ''}`;
+  const fn = async (hours) => {
+    await apiPost(`/admin/users/${encodeURIComponent(tag)}/ban?ban_hours=${hours}`);
+  };
+  openBanModal(title, fn);
+}
+
+function closeClarifyModal() {
+  document.getElementById('clarifyModal').style.display = 'none';
+  currentClarifyReportId = null;
+  currentClarifyFromTag = null;
+}
+
+async function clarifyAndOpenChat() {
+  if (!currentClarifyReportId || !currentClarifyFromTag) return;
+  
+  try {
+    await apiPost(`/admin/reports/${currentClarifyReportId}/action`, null, { action: 'clarify' });
+    toast('Репорт отправлен на уточнение', 'ok');
+    closeClarifyModal();
+    openChat(currentClarifyFromTag);
+    loadReports();
+  } catch (e) {
+    toast('Ошибка: ' + (e.response?.data?.detail || e.message), 'err');
+  }
+}
+
+// Переход в чат (замените путь, если у вас другой маршрут)
+async function openChat(tag) {
+  if (!tag) return;
+
+  const token = localStorage.getItem('access_token');
+  if (!token) {
+    alert('Необходимо войти в систему');
+    return;
+  }
+
+  try {
+    const response = await fetch(`/messages/${encodeURIComponent(tag)}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (response.ok) {
+      const chatHtml = await response.text(); // или JSON, если API отдаёт JSON
+      document.body.innerHTML = chatHtml; // рендерим чат
+    } else {
+      alert('Ошибка доступа к чату: ' + response.status);
+    }
+  } catch (e) {
+    alert('Ошибка при загрузке чата: ' + e.message);
+  }
+}
+
+// ── USERS ────────────────────────────────────────────────────
+let allUsers = [];
+
+async function loadUsers() {
+  const tbody = document.getElementById('usersTableBody');
+  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--muted);">Загрузка пользователей...</td></tr>';
+
+  try {
+    allUsers = await apiGet('/admin/users?limit=500');
+    renderUserStats();
+    filterUsers();
+  } catch (e) {
+    console.error(e);
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--danger);">Ошибка загрузки</td></tr>';
+    toast('Не удалось загрузить пользователей', 'err');
+  }
+}
+
+function renderUserStats() {
+  const total = allUsers.length;
+  const online = allUsers.filter(u => u.is_online).length;
+  const banned = allUsers.filter(isBanned).length;
+
+  document.getElementById('userStats').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Всего</div><div class="stat-value">${total}</div></div>
+    <div class="stat-card"><div class="stat-label">В сети</div><div class="stat-value" style="color:var(--success)">${online}</div></div>
+    <div class="stat-card"><div class="stat-label">Забанено</div><div class="stat-value" style="color:var(--danger)">${banned}</div></div>
+  `;
+}
+
+function filterUsers() {
+  const q = (document.getElementById('userSearch')?.value || '').toLowerCase().trim();
+  const f = document.getElementById('userFilter')?.value || '';
+
+  const list = allUsers.filter(u => {
+    const matchQ = !q || u.tag_name.toLowerCase().includes(q) || (u.name||'').toLowerCase().includes(q);
+    let matchF = true;
+    if (f === 'online') matchF = u.is_online;
+    if (f === 'banned') matchF = isBanned(u);
+    return matchQ && matchF;
+  });
+
+  renderUsers(list);
+}
+
+function renderUsers(list) {
+  const tbody = document.getElementById('usersTableBody');
+  tbody.innerHTML = '';
+
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--muted);">Пользователи не найдены</td></tr>';
+    return;
+  }
+
+  list.forEach(u => {
+    const banned = isBanned(u);
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+          <div class="report-avatar ${avatarColor(u.tag_name)}" style="width:36px;height:36px;font-size:1rem;">
+            ${(u.name || u.tag_name || '?').slice(0,2).toUpperCase()}
+          </div>
+          <div>
+            <div style="font-weight:500;">${escHtml(u.name || '—')}</div>
+            <div style="color:var(--muted);font-size:0.82rem;">${escHtml(u.tag_name)}</div>
+          </div>
+        </div>
+      </td>
+      <td>${escHtml(u.tag_name)}</td>
+      <td><span class="badge ${u.is_online ? 'badge-online' : 'badge-offline'}">${u.is_online ? 'В сети' : 'Оффлайн'}</span></td>
+      <td>${formatDate(u.created_at)}</td>
+      <td>${banned ? `<span style="color:var(--danger)">${formatDate(u.banned_until)}</span>` : '—'}</td>
+      <td>
+        ${banned
+          ? `<button class="btn btn-success btn-sm" onclick="unbanUser('${escHtml(u.tag_name)}')">Разбанить</button>`
+          : `<button class="btn btn-danger btn-sm" onclick="openUserBanModal('${escHtml(u.tag_name)}', '${escHtml(u.name || '')}')">Забанить</button>`
+        }
+      </td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+async function unbanUser(tag) {
+  if (!confirm(`Разбанить ${tag}?`)) return;
+  try {
+    await apiPost(`/admin/users/${encodeURIComponent(tag)}/unban`);
+    toast(`@${tag} разбанен`, 'ok');
+    loadUsers();
+  } catch (e) {
+    toast('Ошибка разбана', 'err');
+  }
+}
+
+// ── Lightbox & Drawer & Init ─────────────────────────────────
+function openLightbox(url) {
+  document.getElementById('lightboxImg').src = url;
+  document.getElementById('lightbox').style.display = 'flex';
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox').style.display = 'none';
+}
+
+function closeDrawer() {
+  document.getElementById('userDrawer').style.display = 'none';
+  document.getElementById('drawerBackdrop').style.display = 'none';
+}
+
+// Инициализация
+document.addEventListener('DOMContentLoaded', () => {
+  loadReports();
+  showPage('reports');
+});
+
+window.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeBanModal();
+    closeClarifyModal();
+    closeLightbox();
+    closeDrawer();
+  }
+});
+</script>
+</body>
+</html>

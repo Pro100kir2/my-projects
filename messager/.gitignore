@@ -1,0 +1,101 @@
+# ================================
+# 🐍 Python / FastAPI
+# ================================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual env
+.venv/
+venv/
+env/
+ENV/
+
+# Environment variables (секреты)
+.env
+.env.*
+!.env.example
+node_modules
+# Python build / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Logs
+*.log
+
+# ================================
+# 🗄️ Database
+# ================================
+*.db
+*.sqlite3
+
+# ================================
+# 🔐 Security / Secrets
+# ================================
+*.pem
+*.key
+*.crt
+*.csr
+secrets/
+private/
+
+# ================================
+# 🧠 Cache / temp
+# ================================
+.cache/
+*.cache
+temp/
+
+# ================================
+# 🧪 Testing
+# ================================
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# ================================
+# 🌐 Node.js / WebRTC / Frontend
+# ================================
+node_modules/
+
+# ❗ ВАЖНО: НЕ игнорим package-lock.json
+# package-lock.json — должен быть в git
+
+# Другие lock-файлы (если не используешь)
+yarn.lock
+pnpm-lock.yaml
+
+# Build outputs
+.next/
+.nuxt/
+.parcel-cache/
+
+# ================================
+# 🧰 IDE / OS
+# ================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+.DS_Store
+Thumbs.db
+
+# ================================
+# 📦 Misc
+# ================================
+*.bak
+*.backup
+*.old
+
+# ================================
+# 🎥 WebRTC / LiveKit
+# ================================
+livekit-demo/
+recordings/
+
+static/uploads/*

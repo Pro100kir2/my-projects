@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="ru" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Secure Messenger — 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+      --glass: rgba(20, 20, 40, 0.45);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --accent: #a855f7;
+      --accent-hover: #c084fc;
+      --text: #f3e8ff;
+      --text-muted: #d1b5ff;
+      --glow: 0 0 60px rgba(168, 85, 247, 0.4), 0 0 120px rgba(236, 72, 153, 0.25);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    /* Фоновые частицы / волны */
+    .bg-particles {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .particle {
+      position: absolute;
+      background: radial-gradient(circle, rgba(168,85,247,0.4) 0%, transparent 70%);
+      border-radius: 50%;
+      animation: float 25s infinite ease-in-out;
+      filter: blur(40px);
+    }
+
+    .particle:nth-child(1) { width: 600px; height: 600px; top: -20%; left: -10%; animation-delay: 0s; }
+    .particle:nth-child(2) { width: 800px; height: 800px; bottom: -30%; right: -20%; animation-delay: 8s; background: radial-gradient(circle, rgba(236,72,153,0.35) 0%, transparent 70%); }
+    .particle:nth-child(3) { width: 500px; height: 500px; top: 40%; right: 10%; animation-delay: 15s; background: radial-gradient(circle, rgba(139,92,246,0.3) 0%, transparent 70%); }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      50% { transform: translate(120px, -80px) rotate(12deg); }
+    }
+
+    .auth-container {
+      position: relative;
+      width: 100%;
+      max-width: 520px;
+      z-index: 10;
+    }
+
+    .auth-card {
+      background: var(--glass);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid var(--glass-border);
+      border-radius: 32px;
+      box-shadow: var(--glow);
+      padding: 3.5rem 2.5rem;
+      overflow: hidden;
+      transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    .auth-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 0 100px rgba(168,85,247,0.5), 0 0 200px rgba(236,72,153,0.3);
+    }
+
+    .logo {
+      font-size: 3.5rem;
+      font-weight: 900;
+      background: linear-gradient(90deg, #c084fc, #ec4899, #a855f7, #c084fc);
+      background-size: 200% 200%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-align: center;
+      margin-bottom: 0.5rem;
+      animation: gradientFlow 8s ease infinite;
+    }
+
+    @keyframes gradientFlow {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .subtitle {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      margin-bottom: 2.5rem;
+      letter-spacing: 0.5px;
+    }
+
+    .tabs {
+      display: flex;
+      background: rgba(30, 30, 60, 0.4);
+      border-radius: 9999px;
+      padding: 0.35rem;
+      margin-bottom: 2.5rem;
+      border: 1px solid var(--glass-border);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 0.85rem 1.5rem;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 1.05rem;
+      cursor: pointer;
+      border-radius: 9999px;
+      transition: all 0.4s ease;
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(90deg, #a855f7, #ec4899);
+      color: white;
+      box-shadow: 0 0 30px rgba(168,85,247,0.5);
+    }
+
+    .form-group {
+      margin-bottom: 1.8rem;
+      position: relative;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.6rem;
+      color: #e0d0ff;
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+
+    input {
+      width: 100%;
+      padding: 1.1rem 1.4rem;
+      background: rgba(30, 30, 60, 0.6);
+      border: 1px solid rgba(168,85,247,0.25);
+      border-radius: 16px;
+      color: white;
+      font-size: 1.05rem;
+      transition: all 0.3s ease;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #c084fc;
+      box-shadow: 0 0 0 4px rgba(168,85,247,0.2);
+      background: rgba(40, 40, 70, 0.7);
+    }
+
+    .password-wrapper {
+      position: relative;
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 1.2rem;
+      top: 65%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: #b0a0ff;
+      cursor: pointer;
+      transition: color 0.3s;
+    }
+
+    .toggle-password:hover {
+      color: #c084fc;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 1.3rem;
+      background: linear-gradient(90deg, #a855f7, #ec4899, #c084fc);
+      background-size: 200% 200%;
+      border: none;
+      border-radius: 16px;
+      color: white;
+      font-size: 1.15rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 1rem;
+      transition: all 0.5s ease;
+      box-shadow: 0 10px 30px rgba(168,85,247,0.4);
+      animation: gradientFlow 6s ease infinite;
+    }
+
+    .input-error {
+      border-color: #f97373 !important;
+      box-shadow: 0 0 0 1px #f97373;
+    }
+
+    .input-error-message {
+      color: #fecaca;
+      font-size: 0.8rem;
+      margin-top: 0.25rem;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 20px 50px rgba(168,85,247,0.6);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .footer-text {
+      text-align: center;
+      margin-top: 2.5rem;
+      color: rgba(255,255,255,0.4);
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 1rem;
+      }
+      .auth-container {
+        max-width: 100%;
+      }
+      .auth-card {
+        padding: 2rem 1.5rem;
+        border-radius: 24px;
+      }
+      .logo {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+      }
+      .subtitle {
+        font-size: 0.95rem;
+        margin-bottom: 2rem;
+      }
+      .tabs {
+        margin-bottom: 2rem;
+        padding: 0.3rem;
+      }
+      .tab-btn {
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+      }
+      .form-group {
+        margin-bottom: 1.5rem;
+      }
+      label {
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+      }
+      input {
+        padding: 0.95rem 1.2rem;
+        font-size: 1rem;
+      }
+      .toggle-password {
+        right: 1rem;
+        top: 60%;
+      }
+      .submit-btn {
+        padding: 1.1rem;
+        font-size: 1rem;
+        margin-top: 0.75rem;
+      }
+      .footer-text {
+        margin-top: 2rem;
+        font-size: 0.85rem;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      body {
+        padding: 0.75rem;
+      }
+      .auth-card {
+        padding: 1.75rem 1.25rem;
+        border-radius: 20px;
+      }
+      .logo {
+        font-size: 2.2rem;
+      }
+      .subtitle {
+        font-size: 0.85rem;
+        margin-bottom: 1.75rem;
+      }
+      .tab-btn {
+        padding: 0.65rem 0.85rem;
+        font-size: 0.9rem;
+      }
+      input {
+        padding: 0.85rem 1rem;
+        font-size: 0.95rem;
+      }
+      .submit-btn {
+        padding: 1rem;
+        font-size: 0.95rem;
+      }
+    }
+    
+    @media (orientation: landscape) and (max-height: 600px) {
+      body {
+        padding: 0.5rem;
+      }
+      .auth-card {
+        padding: 1.5rem 1.25rem;
+      }
+      .logo {
+        font-size: 2rem;
+        margin-bottom: 0.25rem;
+      }
+      .subtitle {
+        font-size: 0.8rem;
+        margin-bottom: 1.5rem;
+      }
+      .form-group {
+        margin-bottom: 1rem;
+      }
+      .submit-btn {
+        padding: 0.9rem;
+        margin-top: 0.5rem;
+      }
+    }
+    
+    /* Стили для модального окна */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    
+    .modal-content {
+      background: var(--glass);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+    }
+    
+    .modal-content h2 {
+      margin: 0 0 1rem 0;
+      color: var(--text);
+      font-size: 1.5rem;
+    }
+    
+    .modal-content p {
+      margin: 0 0 2rem 0;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    
+    .modal-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+    }
+    
+    .modal-actions button {
+      flex: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-particles">
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+  </div>
+
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="logo">Secure Messenger</div>
+      <div class="subtitle">Приватность · Скорость · Будущее 2026</div>
+
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('login')">Вход</button>
+        <button class="tab-btn" onclick="switchTab('register')">Регистрация</button>
+      </div>
+
+      <!-- Форма входа -->
+      <form id="login-form" class="tab-content active">
+        <div class="form-group">
+          <label for="login-tag">Tag name or Name</label>
+          <input type="text" id="login-tag" placeholder="e.g. @user or Display Name" required>
+        </div>
+
+        <div class="form-group password-wrapper">
+          <label for="login-password">Пароль</label>
+          <input type="password" id="login-password" placeholder="" required>
+          <button type="button" class="toggle-password" onclick="togglePassword('login-password')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
+
+        <button type="submit" class="submit-btn">Войти в систему</button>
+      </form>
+
+      <!-- Форма регистрации -->
+      <form id="register-form" class="tab-content" style="display:none;">
+        <div class="form-group">
+          <label for="reg-name">Имя</label>
+          <input type="text" id="reg-name" placeholder="Введите ваше имя" required>
+          <div id="reg-name-error" class="input-error-message"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="reg-tag">Tag Name</label>
+          <input type="text" id="reg-tag" placeholder="" required>
+          <div id="reg-tag-error" class="input-error-message"></div>
+          <div id="reg-tag-suggestions" class="input-error-message"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="reg-phone">Телефон (необязательно)</label>
+          <input type="tel" id="reg-phone" placeholder="">
+          <div id="reg-phone-error" class="input-error-message"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="reg-email">Email (необязательно)</label>
+          <input type="email" id="reg-email" placeholder="">
+          <div id="reg-email-error" class="input-error-message"></div>
+        </div>
+
+        <div class="form-group password-wrapper">
+          <label for="reg-password">Пароль</label>
+          <input type="password" id="reg-password" placeholder="Минимум 12 символов" required>
+          <button type="button" class="toggle-password" onclick="togglePassword('reg-password')">
+            <!-- SVG значок -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
+
+        <button type="submit" class="submit-btn">Создать аккаунт</button>
+      </form>
+
+      <div class="footer-text">
+        © 2026 Secure Messenger — приватность на уровне квантовой защиты
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно для ожидания подтверждения устройства -->
+  <div id="devicePendingModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <h2>🔐 Ожидание подтверждения устройства</h2>
+      <p id="devicePendingMessage"></p>
+      <div class="modal-actions">
+        <button class="submit-btn" onclick="tryLoginAgain()">Попробовать еще раз</button>
+        <button class="profile-btn" onclick="switchTab('login')">Назад</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // Функция для показа модального окна ожидания устройства
+  function showDevicePendingModal(message) {
+    const modal = document.getElementById('devicePendingModal');
+    const messageEl = document.getElementById('devicePendingMessage');
+    messageEl.textContent = message;
+    modal.style.display = 'flex';
+  }
+
+  // Функция для скрытия модального окна
+  function hideDevicePendingModal() {
+    const modal = document.getElementById('devicePendingModal');
+    modal.style.display = 'none';
+  }
+
+  // Функция для повторной попытки входа
+  function tryLoginAgain() {
+    hideDevicePendingModal();
+    // Очищаем форму и позволяем попробовать еще раз
+    document.getElementById('login-password').value = '';
+    document.getElementById('login-password').focus();
+  }
+
+  // Функция для генерации статичного fingerprint устройства
+  function getDeviceFingerprint() {
+    // Проверяем, есть ли уже сохраненный fingerprint
+    const saved = localStorage.getItem('device_fingerprint');
+    if (saved) {
+      return saved;
+    }
+    
+    // Генерируем fingerprint на основе характеристик браузера
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    ctx.textBaseline = 'top';
+    ctx.font = '14px Arial';
+    ctx.fillText('Device fingerprint', 2, 2);
+    
+    const fingerprint = [
+      navigator.userAgent,
+      navigator.language,
+      screen.width + 'x' + screen.height,
+      new Date().getTimezoneOffset(),
+      canvas.toDataURL()
+    ].join('|');
+    
+    // Создаем hash
+    let hash = 0;
+    for (let i = 0; i < fingerprint.length; i++) {
+      const char = fingerprint.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    
+    const deviceFingerprint = 'web_' + Math.abs(hash).toString(16);
+    localStorage.setItem('device_fingerprint', deviceFingerprint);
+    return deviceFingerprint;
+  }
+
+  // Функция для генерации ключевой пары (используем RSA для совместимости)
+  async function generateKeyPair() {
+    try {
+      const keyPair = await window.crypto.subtle.generateKey(
+        {
+          name: "RSASSA-PKCS1-v1_5",
+          modulusLength: 2048,
+          publicExponent: new Uint8Array([1, 0, 1]),
+          hash: "SHA-256",
+        },
+        true,
+        ["sign", "verify"]
+      );
+      
+      const publicKey = await window.crypto.subtle.exportKey("spki", keyPair.publicKey);
+      const privateKey = await window.crypto.subtle.exportKey("pkcs8", keyPair.privateKey);
+      
+      return {
+        publicKeyB64: btoa(String.fromCharCode(...new Uint8Array(publicKey))),
+        privateKeyB64: btoa(String.fromCharCode(...new Uint8Array(privateKey))),
+        keyPair: keyPair
+      };
+    } catch (error) {
+      // Fallback: генерируем простую пару ключей
+      console.warn('RSA не поддерживается, используем fallback');
+      const randomBytes = new Uint8Array(32);
+      crypto.getRandomValues(randomBytes);
+      const privateKeyB64 = btoa(String.fromCharCode(...randomBytes));
+      const publicKeyB64 = btoa(String.fromCharCode(...randomBytes.slice(0, 16)));
+      
+      return {
+        publicKeyB64: publicKeyB64,
+        privateKeyB64: privateKeyB64,
+        keyPair: null
+      };
+    }
+  }
+
+  // Переключение вкладок
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(form => form.style.display = 'none');
+
+    if (tab === 'login') {
+      document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
+      document.getElementById('login-form').style.display = 'block';
+    } else {
+      document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
+      document.getElementById('register-form').style.display = 'block';
+    }
+  }
+
+  // Показ/скрытие пароля
+  function togglePassword(id) {
+    const input = document.getElementById(id);
+    const btn = input.nextElementSibling;
+    if (input.type === 'password') {
+      input.type = 'text';
+      btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M1 1l22 22"/><circle cx="12" cy="12" r="3"/></svg>';
+    } else {
+      input.type = 'password';
+      btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+    }
+  }
+
+  // Обработка формы входа
+  document.getElementById('login-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const btn = this.querySelector('.submit-btn');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="animate-spin inline-block mr-2">↻</span> Входим...';
+
+    try {
+      // Получаем или генерируем ключи для устройства
+      let keyPair = localStorage.getItem('key_pair');
+      if (!keyPair) {
+        const newKeyPair = await generateKeyPair();
+        keyPair = JSON.stringify(newKeyPair);
+        localStorage.setItem('key_pair', keyPair);
+      }
+      const keyPairData = JSON.parse(keyPair);
+      
+      // Получаем статичный fingerprint устройства
+      const deviceFingerprint = getDeviceFingerprint();
+      const deviceName = `Web Device (${navigator.userAgent.includes('Mobile') ? 'Mobile' : 'Desktop'})`;
+
+      const loginData = {
+        username: document.getElementById('login-tag').value,
+        password: document.getElementById('login-password').value,
+        device_fingerprint: deviceFingerprint,
+        device_name: deviceName,
+        public_key_x25519: keyPairData.publicKeyB64
+      };
+
+      const response = await fetch('/token', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(loginData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        
+        // Если ошибка связана с устройством, показываем модалку
+        if (response.status === 403 && errorData.detail && errorData.detail.includes('устройство')) {
+          showDevicePendingModal(errorData.detail);
+          return;
+        }
+        
+        throw new Error(errorData.detail || 'Ошибка входа');
+      }
+
+      const data = await response.json();
+      localStorage.setItem('access_token', data.access_token);
+      localStorage.setItem('refresh_token', data.refresh_token);
+      
+      // Сохраняем данные устройства
+      localStorage.setItem('device_name', deviceName);
+
+      window.location.href = '/';
+    } catch (error) {
+      if (error.message) {
+        alert(error.message);
+      }
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+  });
+
+  // Обработка формы регистрации с валидацией
+  document.getElementById('register-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const btn = this.querySelector('.submit-btn');
+    const originalText = btn.textContent;
+
+    const nameInput = document.getElementById('reg-name');
+    const tagInput = document.getElementById('reg-tag');
+    const phoneInput = document.getElementById('reg-phone');
+    const emailInput = document.getElementById('reg-email');
+
+    const nameError = document.getElementById('reg-name-error');
+    const tagError = document.getElementById('reg-tag-error');
+    const tagSuggestions = document.getElementById('reg-tag-suggestions');
+    const phoneError = document.getElementById('reg-phone-error');
+    const emailError = document.getElementById('reg-email-error');
+
+    // Сброс ошибок
+    [nameInput, tagInput, phoneInput, emailInput].forEach(i => i.classList.remove('input-error'));
+    [nameError, tagError, tagSuggestions, phoneError, emailError].forEach(el => el.textContent = '');
+    tagSuggestions.innerHTML = '';
+
+    let name = (nameInput.value || '').trim();
+    let rawTag = (tagInput.value || '').trim();
+    const phone = (phoneInput.value || '').trim();
+    const email = (emailInput.value || '').trim();
+    const password = document.getElementById('reg-password').value;
+
+    let hasError = false;
+
+    // Имя
+    if (!name) {
+      nameError.textContent = 'Имя обязательно.';
+      nameInput.classList.add('input-error');
+      hasError = true;
+    }
+
+    // Тег
+    if (!rawTag) {
+      tagError.textContent = 'Tag обязателен.';
+      tagInput.classList.add('input-error');
+      hasError = true;
+    }
+
+    // Если ввёл @Имя — убираем @ для внутренней части
+    let tagCore = rawTag.startsWith('@') ? rawTag.slice(1) : rawTag;
+
+    const nameRegex = /^[A-Za-zА-Яа-яЁё0-9]+$/;
+    const tagRegex = /^[A-Za-zА-Яа-яЁё0-9_]+$/;
+
+    if (name && !nameRegex.test(name)) {
+      nameError.textContent = 'Имя может содержать только буквы и цифры, без пробелов и спецсимволов.';
+      nameInput.classList.add('input-error');
+      hasError = true;
+    }
+
+    if (tagCore && !tagRegex.test(tagCore)) {
+      tagError.textContent = 'Tag может содержать только буквы, цифры и _.';
+      tagInput.classList.add('input-error');
+      hasError = true;
+    }
+
+    // Мат / нецензурная лексика
+    const lowerName = name.toLowerCase();
+    const lowerTag = tagCore.toLowerCase();
+    const badWords = [
+      'хуй','хуе','хуя','пизд','еба','ебл','бля','сука','мраз','говн','дерьм',
+      'fuck','shit','bitch','dick','cunt','asshole'
+    ];
+    for (const w of badWords) {
+      if (lowerName.includes(w)) {
+        nameError.textContent = 'Имя содержит запрещённые слова.';
+        nameInput.classList.add('input-error');
+        hasError = true;
+        break;
+      }
+    }
+    for (const w of badWords) {
+      if (lowerTag.includes(w)) {
+        tagError.textContent = 'Tag содержит запрещённые слова.';
+        tagInput.classList.add('input-error');
+        hasError = true;
+        break;
+      }
+    }
+
+    // Телефон (по желанию, но если есть — проверяем)
+    if (phone && phone.trim()) {
+      const phoneRegex = /^\+?[0-9\s\-()]{7,20}$/;
+      if (!phoneRegex.test(phone.trim())) {
+        phoneError.textContent = 'Введите корректный номер телефона.';
+        phoneInput.classList.add('input-error');
+        hasError = true;
+      }
+    }
+
+    // Email (по желанию, но если есть — проверяем)
+    if (email && email.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email.trim())) {
+        emailError.textContent = 'Введите корректный email.';
+        emailInput.classList.add('input-error');
+        hasError = true;
+      }
+    }
+
+    // Простейшая проверка пароля
+    if (!password || password.length < 12) {
+      alert('Пароль должен содержать минимум 12 символов.');
+      hasError = true;
+    }
+
+    if (hasError) return;
+
+    // Тег всегда с большой буквы
+    if (tagCore.length > 0) {
+      tagCore = tagCore.charAt(0).toUpperCase() + tagCore.slice(1);
+    }
+
+    const payload = {
+      name,
+      tag_name: tagCore,
+      phone: phone || undefined,
+      email: email || undefined,
+      password
+    };
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="animate-spin inline-block mr-2">↻</span> Создаём...';
+
+    // Генерируем данные устройства для регистрации
+    let keyPair = localStorage.getItem('key_pair');
+    if (!keyPair) {
+      const newKeyPair = await generateKeyPair();
+      keyPair = JSON.stringify(newKeyPair);
+      localStorage.setItem('key_pair', keyPair);
+    }
+    const keyPairData = JSON.parse(keyPair);
+    
+    const deviceFingerprint = getDeviceFingerprint();
+    const deviceName = `Web Device (${navigator.userAgent.includes('Mobile') ? 'Mobile' : 'Desktop'})`;
+
+    // Создаем FormData для отправки
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('tag_name', tagCore);
+    if (phone && phone.trim()) formData.append('phone', phone.trim());
+    if (email && email.trim()) formData.append('email', email.trim());
+    formData.append('password', password);
+    formData.append('device_fingerprint', deviceFingerprint);
+    formData.append('device_name', deviceName);
+    formData.append('public_key_x25519', keyPairData.publicKeyB64);
+
+    try {
+      const response = await fetch('/register', {
+        method: 'POST',
+        body: formData  // FormData автоматически установит правильный Content-Type
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        const detail = errorData.detail || 'Ошибка регистрации';
+        
+        // Если устройство уже зарегистрировано - перенаправляем на вход
+        if (response.status === 409 && detail.includes('already registered')) {
+          alert('Это устройство уже зарегистрировано. Перенаправляем на страницу входа.');
+          switchTab('login');
+          return;
+        }
+        
+        alert(detail);
+        return;
+      }
+
+      const result = await response.json();
+
+      // Автоматический вход после успешной регистрации
+      if (result.access_token) {
+        // Сохраняем токен
+        localStorage.setItem('access_token', result.access_token);
+        if (result.refresh_token) {
+          localStorage.setItem('refresh_token', result.refresh_token);
+        }
+        
+        // Сохраняем device_id и данные устройства для использования
+        if (result.device_id) {
+          localStorage.setItem('device_id', result.device_id);
+        }
+        localStorage.setItem('device_fingerprint', deviceFingerprint);
+        localStorage.setItem('device_name', deviceName);
+        // key_pair уже сохранен ранее
+        
+        // Сохраняем данные пользователя если есть
+        if (result.user) {
+          localStorage.setItem('user_data', JSON.stringify(result.user));
+        }
+        
+        // Перенаправляем на главную страницу
+        window.location.href = '/';
+      } else {
+        // Fallback: переключаем на вход если токен не получен
+        switchTab('login');
+        document.getElementById('login-tag').value = '@' + tagCore;
+      }
+    } catch (error) {
+      if (error.message) {
+        alert(error.message);
+      }
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+  });
+</script>
+</body>
+</html>

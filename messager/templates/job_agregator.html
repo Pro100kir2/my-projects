@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Aggregator - Nexo Messenger</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .job-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.9);
+            color: #333;
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,1);
+            transform: translateY(-2px);
+        }
+
+        .job-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-top: 40px;
+            color: white;
+        }
+
+        .job-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .job-header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .job-filters {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .filter-group input, .filter-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .filter-group input:focus, .filter-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .job-list {
+            display: grid;
+            gap: 20px;
+        }
+
+        .job-card {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .job-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+        }
+
+        .job-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #333;
+            line-height: 1.3;
+        }
+
+        .job-company {
+            color: #666;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .job-location {
+            color: #888;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .job-salary {
+            font-weight: 700;
+            color: #10b981;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .job-description {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+        }
+
+        .job-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .job-tag {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .job-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+            transform: translateY(-2px);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: white;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            margin: 40px 0;
+        }
+
+        .loading p {
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .loading p:first-child {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .job-filters {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .filter-group {
+                min-width: 100%;
+            }
+
+            .job-header h1 {
+                font-size: 2rem;
+            }
+
+            .job-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="back-btn">←</a>
+    
+    <div class="job-container">
+        <div class="job-header">
+            <h1>🔍 Job Aggregator</h1>
+            <p>Найдите работу своей мечты</p>
+        </div>
+
+        <div class="job-filters">
+            <div class="filter-group">
+                <label for="search">Поиск</label>
+                <input type="text" id="search" placeholder="Должность, компания, ключевые слова">
+            </div>
+            <div class="filter-group">
+                <label for="location">Локация</label>
+                <input type="text" id="location" placeholder="Город или удалёнка">
+            </div>
+            <div class="filter-group">
+                <label for="salary">Зарплата (от)</label>
+                <input type="number" id="salary" placeholder="₽">
+            </div>
+            <div class="filter-group">
+                <label for="employment">Тип занятости</label>
+                <select id="employment">
+                    <option value="">Все типы</option>
+                    <option value="full">Полная занятость</option>
+                    <option value="part">Частичная занятость</option>
+                    <option value="remote">Удалённая работа</option>
+                    <option value="contract">Контракт</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="job-list" id="jobList">
+            <div class="loading">
+                <p>🔄 Загрузка вакансий...</p>
+                <p>Это заглушка. В реальности здесь будут агрегированные вакансии с разных job-порталов.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Заглушка для демонстрации
+        const mockJobs = [
+            {
+                id: 1,
+                title: "Senior Python Developer",
+                company: "Tech Company",
+                location: "Москва",
+                salary: "250 000 - 350 000 ₽",
+                description: "Ищем опытного Python разработчика для работы над высоконагруженными проектами. Требуется опыт работы с Django, FastAPI, PostgreSQL.",
+                tags: ["Python", "Django", "FastAPI", "PostgreSQL"],
+                url: "#"
+            },
+            {
+                id: 2,
+                title: "Frontend Developer (React)",
+                company: "Startup Hub",
+                location: "Удалённо",
+                salary: "180 000 - 250 000 ₽",
+                description: "Нужен Frontend разработчик с опытом работы с React, TypeScript. Работа в международной команде.",
+                tags: ["React", "TypeScript", "JavaScript", "CSS"],
+                url: "#"
+            },
+            {
+                id: 3,
+                title: "DevOps Engineer",
+                company: "Cloud Solutions",
+                location: "Санкт-Петербург",
+                salary: "200 000 - 300 000 ₽",
+                description: "Ищем DevOps инженера с опытом работы с Docker, Kubernetes, CI/CD. Облачные технологии (AWS/GCP).",
+                tags: ["DevOps", "Docker", "Kubernetes", "AWS", "CI/CD"],
+                url: "#"
+            },
+            {
+                id: 4,
+                title: "Mobile Developer (Flutter)",
+                company: "Mobile Tech",
+                location: "Удалённо",
+                salary: "150 000 - 220 000 ₽",
+                description: "Разработка мобильных приложений на Flutter. Требуется опыт создания кроссплатформенных решений.",
+                tags: ["Flutter", "Dart", "Mobile", "iOS", "Android"],
+                url: "#"
+            },
+            {
+                id: 5,
+                title: "Data Scientist",
+                company: "AI Labs",
+                location: "Москва",
+                salary: "300 000 - 400 000 ₽",
+                description: "Ищем Data Scientist с опытом работы с машинным обучением, анализом данных, Python, ML-библиотеки.",
+                tags: ["Data Science", "Python", "Machine Learning", "TensorFlow", "Pandas"],
+                url: "#"
+            }
+        ];
+
+        function renderJobs(jobs) {
+            const jobList = document.getElementById('jobList');
+            
+            if (jobs.length === 0) {
+                jobList.innerHTML = '<div class="loading"><p>Вакансии не найдены</p></div>';
+                return;
+            }
+
+            jobList.innerHTML = jobs.map(job => `
+                <div class="job-card">
+                    <div class="job-title">${job.title}</div>
+                    <div class="job-company">${job.company}</div>
+                    <div class="job-location">📍 ${job.location}</div>
+                    <div class="job-salary">${job.salary}</div>
+                    <div class="job-description">${job.description}</div>
+                    <div class="job-tags">
+                        ${job.tags.map(tag => `<span class="job-tag">${tag}</span>`).join('')}
+                    </div>
+                    <div class="job-actions">
+                        <a href="${job.url}" class="btn btn-primary" onclick="applyJob(${job.id}); return false;">Откликнуться</a>
+                        <button class="btn btn-secondary" onclick="saveJob(${job.id});">Сохранить</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterJobs() {
+            const search = document.getElementById('search').value.toLowerCase();
+            const location = document.getElementById('location').value.toLowerCase();
+            const salary = document.getElementById('salary').value;
+            const employment = document.getElementById('employment').value;
+
+            const filtered = mockJobs.filter(job => {
+                const matchSearch = !search || 
+                    job.title.toLowerCase().includes(search) || 
+                    job.company.toLowerCase().includes(search) ||
+                    job.description.toLowerCase().includes(search);
+                
+                const matchLocation = !location || job.location.toLowerCase().includes(location);
+                
+                const matchSalary = !salary || true; // В реальности здесь будет парсинг зарплаты
+                
+                return matchSearch && matchLocation && matchSalary;
+            });
+
+            renderJobs(filtered);
+        }
+
+        function applyJob(jobId) {
+            alert(`Функция отклика на вакансию #${jobId} пока не реализована. В реальности здесь будет переход на сайт работодателя или форма отклика.`);
+        }
+
+        function saveJob(jobId) {
+            alert(`Вакансия #${jobId} сохранена в избранное. В реальности это будет синхронизировано с вашим профилем в мессенджере.`);
+        }
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            // Добавляем обработчики для фильтров
+            document.getElementById('search').addEventListener('input', filterJobs);
+            document.getElementById('location').addEventListener('input', filterJobs);
+            document.getElementById('salary').addEventListener('input', filterJobs);
+            document.getElementById('employment').addEventListener('change', filterJobs);
+
+            // Изначально показываем все вакансии
+            setTimeout(() => {
+                renderJobs(mockJobs);
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

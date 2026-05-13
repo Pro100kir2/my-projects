@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexo — О нас</title>
+    <style>
+        :root, [data-theme="dark"] {
+            --bg: #0a192f;
+            --sidebar: rgba(17, 24, 39, 0.95);
+            --chat-bg: #111827;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --accent: #6366f1;
+            --accent-dark: #4f46e5;
+            --message-sent: #6366f1;
+            --message-received: #1f2a42;
+            --border: rgba(148, 163, 184, 0.15);
+            --glow: 0 0 40px rgba(99, 102, 241, 0.3);
+        }
+        [data-theme="light"] {
+            --bg: #f1f5f9;
+            --sidebar: rgba(255,255,255,0.95);
+            --chat-bg: #ffffff;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --accent: #4f46e5;
+            --accent-dark: #4338ca;
+            --message-sent: #6366f1;
+            --message-received: #e2e8f0;
+            --border: rgba(0,0,0,0.08);
+            --glow: none;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        .app {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .chat-header-active {
+            padding: 1.2rem 1.5rem;
+            background: var(--chat-bg);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            font-size: 1.3rem;
+            font-weight: 600;
+            text-align: center;
+        }
+        .about-content {
+            max-width: 820px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+            line-height: 1.7;
+        }
+        .about-content h1 {
+            font-size: 2.4rem;
+            margin-bottom: 1.5rem;
+            color: var(--accent);
+            text-align: center;
+        }
+        .about-content h2 {
+            font-size: 1.8rem;
+            margin: 2.5rem 0 1.2rem;
+            color: var(--text);
+        }
+        .about-content p {
+            margin-bottom: 1.4rem;
+            font-size: 1.05rem;
+            color: var(--text-muted);
+        }
+        .about-content strong {
+            color: var(--text);
+        }
+        .security-features {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.8rem;
+            margin: 2rem 0;
+        }
+        .security-features ul {
+            list-style: none;
+            padding: 0;
+        }
+        .security-features li {
+            margin: 1.2rem 0;
+            padding-left: 2.2rem;
+            position: relative;
+        }
+        .security-features li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-weight: bold;
+        }
+        .graphic-placeholder {
+            margin: 2.5rem 0;
+            text-align: center;
+            background: rgba(99, 102, 241, 0.08);
+            border: 1px dashed var(--accent);
+            border-radius: 16px;
+            padding: 2rem;
+        }
+        .graphic-placeholder img {
+            max-width: 100%;
+            border-radius: 12px;
+            box-shadow: var(--glow);
+        }
+        .rules-box {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.8rem;
+            margin: 2.5rem 0;
+        }
+        .rules-box ul {
+            padding-left: 1.4rem;
+        }
+        .rules-box li {
+            margin: 0.9rem 0;
+        }
+        .highlight {
+            color: var(--accent);
+            font-weight: 600;
+        }
+        @media (max-width: 768px) {
+            .about-content {
+                padding: 1.5rem 1rem;
+            }
+            .about-content h1 {
+                font-size: 2rem;
+            }
+            .about-content h2 {
+                font-size: 1.6rem;
+            }
+        }
+        .back-btn {
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 999; /* чтобы быть поверх всего */
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background: var(--accent-dark);
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body data-theme="dark">
+    <button class="back-btn" onclick="location.href='/'">← Назад</button>
+    <div class="app">
+        <div class="chat-header-active">
+            О нас — Nexo Messenger
+        </div>
+
+        <div class="about-content message-received">
+            <h1>Nexo — безопасное общение без компромиссов</h1>
+
+            <p>Nexo создан для того, чтобы каждый человек мог общаться свободно, уверенно и абсолютно приватно. В мире, где данные пользователей становятся товаром, мы выбрали другой путь — <span class="highlight">максимальную защиту вашей переписки</span>.</p>
+
+            <h2>Наша главная ценность — ваша приватность</h2>
+
+            <div class="security-features">
+                <ul>
+                    <li><strong>Сквозное шифрование (End-to-End Encryption)</strong> — сообщения шифруются на устройстве отправителя и расшифровываются только на устройстве получателя.</li>
+                    <li><strong>Отсутствие escrow-ключей и мастер-ключей</strong> — у нас нет технической возможности получить доступ к вашим перепискам. Даже администраторы Nexo не могут их прочитать.</li>
+                    <li><strong>Передовая ИИ-валидация контекста</strong> — вместо ручного модерирования или хранения ключей мы используем современную модель искусственного интеллекта, которая анализирует контекст и риски, не нарушая приватности.</li>
+                </ul>
+            </div>
+
+            <h2>Почему безопасность важна?</h2>
+                <ul>
+                    <p>В современном интернете многие мессенджеры подвержены рискам. Исследования показывают, что правительства и компании часто требуют внедрения бэкдоров для доступа к данным, что значительно снижает уровень безопасности. Например, в популярных приложениях, таких как WhatsApp, есть постоянное давление на ослабление шифрования для "борьбы с преступностью", но это создает уязвимости для всех пользователей.
+                    Согласно отчетам, внедрение бэкдоров делает системы уязвимыми к хакерским атакам и злоупотреблениям, поскольку любой "задний вход" может быть использован не только властями, но и злоумышленниками. В Nexo мы отвергаем такие подходы, фокусируясь на истинной защите.</strong>
+                    </p>
+                    <h2>Пять столпов безопасных мессенджеров</h2>
+                    <div class="graphic-placeholder">
+                        <img src="static/first-img.png" alt="Статистика бэкдоров в мессенджерах">
+                    </div>
+                </ul>
+            <h2>Статистика и исследования</h2>
+            <p>68% интернет-пользователей в России опасаются за сохранность своих персональных данных в сети (23% — «очень опасаются», 45% — «скорее опасаются»).
+            Тревога выше среди женщин (74%), молодёжи до 24 лет (70%) и людей 45–59 лет (74%).
+            31% не испытывают переживаний по поводу взлома аккаунтов или утечек данных.
+
+            Это классический пример, как растёт страх утечек личной информации — идеально иллюстрирует, почему нужен настоящий E2E-мессенджер без доступа третьих лиц.
+            </p>
+            <p>
+              Ссылка на полный отчёт:
+              <a href="https://wciom.ru/analytical-reviews/analiticheskii-obzor/cifrovaja-samooborona"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 style="color: var(--text); text-decoration: underline;">
+                wciom.ru/analytical-reviews/analiticheskii-obzor/cifrovaja-samooborona
+              </a>
+            </p>
+            <h2>Почему большинство мессенджеров не такие безопасные?</h2>
+
+            <p>Многие популярные приложения под давлением правительств и спецслужб внедряют так называемые <strong>бэкдоры</strong> — скрытые механизмы доступа к переписке. Это делает их уязвимыми не только для властей, но и для хакеров.</p>
+
+            <h2>Люди всё больше беспокоятся о приватности</h2>
+
+            <p>По данным различных исследований 2024–2025 годов:</p>
+            <ul>
+                <li>≈ 78–82% пользователей интернета не чувствуют себя в полной безопасности онлайн</li>
+                <li>≈ 65% людей готовы отказаться от сервиса, если узнают, что их переписка может быть прочитана третьими лицами</li>
+                <li>Среди людей 18–34 лет уровень недоверия к популярным мессенджерам достигает 70–75%</li>
+            </ul>
+
+            <!-- Здесь будет ваша вторая диаграмма -->
+            <div class="graphic">
+            <h2>Сколько мессенджеров действительно защищены от бэкдоров?</h2>
+            <p>Оценка на 2025–2026 годы (на основе аудитов EFF, Secuteck и других источников)</p>
+                <div class="graphic-placeholder">
+                    <img src="static/second-img.jpg">
+                </div>
+            <ul>
+                <li style="color: green;">25% — Полноценное E2EE без компромиссов</li>
+                <li style="color: orange;">55% — E2EE с рисками (метаданные, давление властей)</li>
+                <li style="color: red;">20% — Нет E2EE или слабости</li>
+            </ul>
+
+            <p>Nexo — в первой категории: без бэкдоров, без доступа администраторов, с ИИ-анализом контекста вместо ключей.</p>
+        </div>
+
+            <h2>Наши правила</h2>
+
+            <div class="rules-box">
+                <p><strong>Мы очень просим вас:</strong></p>
+                <ul>
+                    <li>Не использовать Nexo для незаконной деятельности</li>
+                    <li>Не распространять вредоносный контент, угрозы, призывы к насилию</li>
+                    <li>Уважать приватность и границы других пользователей</li>
+                </ul>
+                <p>Нарушение этих простых правил может привести к блокировке аккаунта.</p>
+            </div>
+
+            <h2>Nexo — это про свободу и безопасность</h2>
+
+            <p>Мы не собираем ваши личные данные сверх необходимого. Мы не продаём рекламу на основе вашей переписки. Мы не сотрудничаем с теми, кто требует доступ к вашим сообщениям.</p>
+
+            <p style="text-align: center; margin-top: 3rem; font-size: 1.3rem; font-weight: 600;">
+                Добро пожаловать в Nexo —<br>где ваше слово действительно только ваше.
+            </p>
+        </div>
+    </div>
+
+</body>
+</html>

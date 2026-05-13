@@ -2857,18 +2857,14 @@ async function generateE2EEKeyPair() {
 // Функция для генерации ключевой пары (та же что и в auth.html)
 async function generateKeyPair() {
     try {
+        // Генерируем X25519 ключевую пару для современного E2EE
         const keyPair = await window.crypto.subtle.generateKey(
-            {
-                name: "RSASSA-PKCS1-v1_5",
-                modulusLength: 2048,
-                publicExponent: new Uint8Array([1, 0, 1]),
-                hash: "SHA-256",
-            },
+            { name: "X25519" },
             true,
-            ["sign", "verify"]
+            ["deriveBits", "deriveKey"]
         );
 
-        const publicKey = await window.crypto.subtle.exportKey("spki", keyPair.publicKey);
+        const publicKey = await window.crypto.subtle.exportKey("raw", keyPair.publicKey);
         const privateKey = await window.crypto.subtle.exportKey("pkcs8", keyPair.privateKey);
 
         return {
@@ -2878,7 +2874,7 @@ async function generateKeyPair() {
         };
     } catch (error) {
         // Fallback: генерируем простую пару ключей
-        console.warn('RSA не поддерживается, используем fallback');
+        console.warn('X25519 не поддерживается, используем fallback');
         const randomBytes = new Uint8Array(32);
         crypto.getRandomValues(randomBytes);
         const privateKeyB64 = btoa(String.fromCharCode(...randomBytes));
@@ -2906,17 +2902,17 @@ async function loadOrCreateKeyPair() {
                     const privateKey = await crypto.subtle.importKey(
                         'pkcs8',
                         b64ToBuf(keyPairData.privateKeyB64),
-                        { name: 'RSA-OAEP', hash: 'SHA-256' },
+                        { name: 'X25519' },
                         false,
-                        ['decrypt']
+                        ['deriveBits', 'deriveKey']
                     );
 
                     const publicKey = await crypto.subtle.importKey(
-                        'spki',
+                        'raw',
                         b64ToBuf(keyPairData.publicKeyB64),
-                        { name: 'RSA-OAEP', hash: 'SHA-256' },
+                        { name: 'X25519' },
                         false,
-                        ['encrypt']
+                        []
                     );
 
                     return {
@@ -2927,8 +2923,45 @@ async function loadOrCreateKeyPair() {
                     };
                 } catch (importError) {
                     console.warn('Failed to import saved keys as CryptoKey:', importError.message);
-                    // Возвращаем как есть, функции шифрования будут импортировать при необходимости
-                    return keyPairData;
+                    console.warn('This likely means old RSA keys need to be regenerated as X25519');
+
+                    // Clear old keys and regenerate new X25519 keys
+                    localStorage.removeItem('key_pair');
+                    console.log('Cleared old RSA keys, regenerating X25519 keys...');
+
+                    // Генерируем новые X25519 ключи
+                    const keyPair = await generateKeyPair();
+                    localStorage.setItem('key_pair', JSON.stringify(keyPair));
+
+                    // Преобразуем новые ключи в CryptoKey объекты
+                    try {
+                        const privateKey = await crypto.subtle.importKey(
+                            'pkcs8',
+                            b64ToBuf(keyPair.privateKeyB64),
+                            { name: 'X25519' },
+                            false,
+                            ['deriveBits', 'deriveKey']
+                        );
+
+                        const publicKey = await crypto.subtle.importKey(
+                            'raw',
+                            b64ToBuf(keyPair.publicKeyB64),
+                            { name: 'X25519' },
+                            false,
+                            []
+                        );
+
+                        console.log('Successfully generated new X25519 keys');
+                        return {
+                            publicKeyB64: keyPair.publicKeyB64,
+                            privateKeyB64: keyPair.privateKeyB64,
+                            privateKey: privateKey,
+                            publicKey: publicKey
+                        };
+                    } catch (newKeyError) {
+                        console.error('Failed to import new X25519 keys:', newKeyError.message);
+                        return keyPairData;
+                    }
                 }
             }
         } catch (error) {
@@ -3120,7 +3153,46 @@ async function encryptMessageForDevices(plaintext, recipientDevices) {
             const recipientPubBufLen = recipientPubBufRaw.byteLength;
             let recipientPub;
 
-            if (recipientPubBufLen === 65) {
+            if (recipientPubBufLen === 32) {
+                // X25519 ключ (современный формат)
+                console.log('Using X25519 key for device:', dev.id);
+
+                try {
+                    // Импортируем X25519 публичный ключ
+                    recipientPub = await crypto.subtle.importKey(
+                        'raw',
+                        recipientPubBufRaw,
+                        { name: 'X25519' },
+                        true,
+                        []
+                    );
+
+                    // Генерируем эфемерную пару X25519
+                    const ephemeralPair = await crypto.subtle.generateKey({ name: 'X25519' }, true, ['deriveBits']);
+                    const shared = await crypto.subtle.deriveBits(
+                        { name: 'X25519', public: recipientPub },
+                        ephemeralPair.privateKey,
+                        256
+                    );
+
+                    const epkRaw = await crypto.subtle.exportKey('raw', ephemeralPair.publicKey);
+                    const iv2 = crypto.getRandomValues(new Uint8Array(12));
+                    const wrapKey = await crypto.subtle.importKey('raw', new Uint8Array(shared), 'AES-GCM', false, ['encrypt']);
+                    const wrapped = await crypto.subtle.encrypt(
+                        { name: 'AES-GCM', iv: iv2, tagLength: 128 },
+                        wrapKey,
+                        sessionKey
+                    );
+
+                    const encryptedSessionKey = bufToB64(epkRaw) + '.' + bufToB64(iv2) + '.' + bufToB64(new Uint8Array(wrapped));
+                    encryptedSessionKeys[dev.id] = encryptedSessionKey;
+
+                } catch (x25519Error) {
+                    console.warn('X25519 encryption failed for device:', dev.id, 'error:', x25519Error.message);
+                    continue;
+                }
+
+            } else if (recipientPubBufLen === 65) {
                 // P-256 ключ (старый формат)
                 console.log('Using P-256 key for device:', dev.id);
                 recipientPub = await crypto.subtle.importKey(
@@ -3223,11 +3295,11 @@ async function decryptMessageWithMyKey(contentB64, encryptedSessionKeys, myDevic
 
     try {
         // Проверяем формат зашифрованного ключа
-        const parts = forMe.split(':');
+        const parts = forMe.split('.');
         let sessionKey;
 
         if (parts.length === 3) {
-            // Старый формат P-256: epkB64:iv2B64:wrappedB64
+            // X25519 формат: epkB64.iv2B64.wrappedB64 (точки)
             const [epkB64, iv2B64, wrappedB64] = parts;
 
             // Проверяем тип privateKey
@@ -3235,43 +3307,128 @@ async function decryptMessageWithMyKey(contentB64, encryptedSessionKeys, myDevic
 
             // Если у нас CryptoKey RSA объект, но зашифрованный ключ в формате ECDH - несовместимо
             if (privateKey && typeof privateKey === 'object' && privateKey.algorithm && privateKey.algorithm.name === 'RSA-OAEP') {
-                console.warn('RSA private key with ECDH encrypted session key - incompatible');
+                console.warn('RSA private key with X25519 encrypted session key - incompatible');
                 return null;
             }
 
-            // Если privateKey строка, пробуем импортировать как ECDH
+            // Если privateKey строка, пробуем импортировать как X25519 или ECDH
             if (typeof myPrivateKey === 'string') {
                 try {
-                    // Пробуем импортировать как ECDH P-256
+                    // Сначала пробуем импортировать как X25519 (современный формат)
                     privateKey = await crypto.subtle.importKey(
-                        'raw',
+                        'pkcs8',
                         b64ToBuf(myPrivateKey),
-                        ECDH_PARAMS,
+                        { name: 'X25519' },
                         true,
                         ['deriveBits']
                     );
-                } catch (ecdhError) {
-                    console.warn('Failed to import private key as ECDH:', ecdhError.message);
-                    return null;
+                } catch (x25519Error) {
+                    try {
+                        // Если не получилось, пробуем как ECDH P-256 (старый формат)
+                        privateKey = await crypto.subtle.importKey(
+                            'raw',
+                            b64ToBuf(myPrivateKey),
+                            ECDH_PARAMS,
+                            true,
+                            ['deriveBits']
+                        );
+                    } catch (ecdhError) {
+                        console.warn('Failed to import private key as X25519 or ECDH:', x25519Error.message, ecdhError.message);
+                        return null;
+                    }
                 }
             }
 
-            // ECDH расшифровка
+            // Определяем формат по длине эфемерного ключа
             const epkBuf = b64ToBuf(epkB64);
-            const ephemeralPub = await crypto.subtle.importKey('raw', epkBuf, ECDH_PARAMS, true, []);
-            const shared = await crypto.subtle.deriveBits(
-                { name: 'ECDH', public: ephemeralPub },
-                privateKey,
-                256
-            );
-            const iv2 = b64ToBuf(iv2B64);
-            const wrapKey = await crypto.subtle.importKey('raw', new Uint8Array(shared), 'AES-GCM', false, ['decrypt']);
-            const wrapped = b64ToBuf(wrappedB64);
-            sessionKey = await crypto.subtle.decrypt(
-                { name: 'AES-GCM', iv: iv2, tagLength: 128 },
-                wrapKey,
-                wrapped
-            );
+            const epkLen = epkBuf.byteLength;
+
+            if (epkLen === 32) {
+                // X25519 расшифровка
+                const ephemeralPub = await crypto.subtle.importKey('raw', epkBuf, { name: 'X25519' }, true, []);
+                const shared = await crypto.subtle.deriveBits(
+                    { name: 'X25519', public: ephemeralPub },
+                    privateKey,
+                    256
+                );
+                const iv2 = b64ToBuf(iv2B64);
+                const wrapKey = await crypto.subtle.importKey('raw', new Uint8Array(shared), 'AES-GCM', false, ['decrypt']);
+                const wrapped = b64ToBuf(wrappedB64);
+                sessionKey = await crypto.subtle.decrypt(
+                    { name: 'AES-GCM', iv: iv2, tagLength: 128 },
+                    wrapKey,
+                    wrapped
+                );
+            } else {
+                // ECDH P-256 расшифровка (старый формат)
+                const ephemeralPub = await crypto.subtle.importKey('raw', epkBuf, ECDH_PARAMS, true, []);
+                const shared = await crypto.subtle.deriveBits(
+                    { name: 'ECDH', public: ephemeralPub },
+                    privateKey,
+                    256
+                );
+                const iv2 = b64ToBuf(iv2B64);
+                const wrapKey = await crypto.subtle.importKey('raw', new Uint8Array(shared), 'AES-GCM', false, ['decrypt']);
+                const wrapped = b64ToBuf(wrappedB64);
+                sessionKey = await crypto.subtle.decrypt(
+                    { name: 'AES-GCM', iv: iv2, tagLength: 128 },
+                    wrapKey,
+                    wrapped
+                );
+            }
+
+        } else if (forMe.includes(':')) {
+            // Старый формат P-256: epkB64:iv2B64:wrappedB64 (двоеточия)
+            const colonParts = forMe.split(':');
+            if (colonParts.length === 3) {
+                const [epkB64, iv2B64, wrappedB64] = colonParts;
+
+                // Проверяем тип privateKey
+                let privateKey = myPrivateKey;
+
+                // Если у нас CryptoKey RSA объект, но зашифрованный ключ в формате ECDH - несовместимо
+                if (privateKey && typeof privateKey === 'object' && privateKey.algorithm && privateKey.algorithm.name === 'RSA-OAEP') {
+                    console.warn('RSA private key with ECDH encrypted session key - incompatible');
+                    return null;
+                }
+
+                // Если privateKey строка, пробуем импортировать как ECDH
+                if (typeof myPrivateKey === 'string') {
+                    try {
+                        // Пробуем импортировать как ECDH P-256
+                        privateKey = await crypto.subtle.importKey(
+                            'raw',
+                            b64ToBuf(myPrivateKey),
+                            ECDH_PARAMS,
+                            true,
+                            ['deriveBits']
+                        );
+                    } catch (ecdhError) {
+                        console.warn('Failed to import private key as ECDH:', ecdhError.message);
+                        return null;
+                    }
+                }
+
+                // ECDH расшифровка
+                const epkBuf = b64ToBuf(epkB64);
+                const ephemeralPub = await crypto.subtle.importKey('raw', epkBuf, ECDH_PARAMS, true, []);
+                const shared = await crypto.subtle.deriveBits(
+                    { name: 'ECDH', public: ephemeralPub },
+                    privateKey,
+                    256
+                );
+                const iv2 = b64ToBuf(iv2B64);
+                const wrapKey = await crypto.subtle.importKey('raw', new Uint8Array(shared), 'AES-GCM', false, ['decrypt']);
+                const wrapped = b64ToBuf(wrappedB64);
+                sessionKey = await crypto.subtle.decrypt(
+                    { name: 'AES-GCM', iv: iv2, tagLength: 128 },
+                    wrapKey,
+                    wrapped
+                );
+            } else {
+                console.warn('Invalid old format encrypted session key');
+                return null;
+            }
 
         } else {
             // Новый формат RSA: просто base64 зашифрованный ключ
